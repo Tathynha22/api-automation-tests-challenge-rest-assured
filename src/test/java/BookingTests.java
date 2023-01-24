@@ -1,98 +1,101 @@
-import Entities.Booking;
-import Entities.BookingDates;
-import Entities.User;
-import com.github.javafaker.Faker;
-import io.restassured.RestAssured;
-import io.restassured.filter.log.ErrorLoggingFilter;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.*;
+Entidades do pacote ;
 
-import static io.restassured.RestAssured.given;
-import static io.restassured.config.LogConfig.logConfig;
-import static io.restassured.module.jsv.JsonSchemaValidator.*;
-import static org.hamcrest.Matchers.*;
+importar com. github. javafaker. Impostor;
+importação io. inquieto. Tranquilidade;
+importação io. inquieto. filtro. log. ErrorLoggingFilter;
+importação io. inquieto. filtro. log. RequestLoggingFilter (Filtro de SolicitaçãoLog);
+importação io. inquieto. filtro. log. ResponseLoggingFilter (Filtro de Registro de Resposta);
+importação io. inquieto. Disponível em: http. Tipo de Conteúdo;
+importação io. inquieto. resposta. Resposta;
+importação io. inquieto. especificação. RequestSpecification (em inglês);
+importar organização. junit. Júpiter. api.*;
 
-public class BookingTests {
-    public static Faker faker;
-    private static RequestSpecification request;
-    private static Booking booking;
-    private static BookingDates bookingDates;
-    private static User user;
+importar io estático. inquieto. Fique tranquilo. dado;
+importar io estático. inquieto. config. LogConfig. logConfig;
+importar io estático. inquieto. módulo. jsv. JsonSchemaValidator.*;
+importar organização estática. hamcrest. Correspondências.*;
 
-    @BeforeAll
-    public static void Setup(){
-        RestAssured.baseURI = "https://restful-booker.herokuapp.com";
-        faker = new Faker();
-        user = new User(faker.name().username(),
-                faker.name().firstName(),
-                faker.name().lastName(),
-                faker.internet().safeEmailAddress(),
-                faker.internet().password(8,10),
-                faker.phoneNumber().toString());
+importar organização estática. junit. Júpiter. api. Asserções.*;
 
-        bookingDates = new BookingDates("2018-01-02", "2018-01-03");
-        booking = new Booking(user.getFirstName(), user.getLastName(),
-                (float)faker.number().randomDouble(2, 50, 100000),
-                true,bookingDates,
-                "");
-        RestAssured.filters(new RequestLoggingFilter(),new ResponseLoggingFilter(), new ErrorLoggingFilter());
-    }
+classe BookingTest {
+	
+	falsificador de falsificação  estático público;
+	solicitação RequestSpecification estática  privada;
+	Reserva estática  privada Reserva;
+	 privado estático BookingDates bookingDates ;
+	usuário estático privado Usuário;	
 
-    @BeforeEach
-    void setRequest(){
-        request = given().config(RestAssured.config().logConfig(logConfig().enableLoggingOfRequestAndResponseIfValidationFails()))
-                .contentType(ContentType.JSON)
-                .auth().basic("admin", "password123");
-    }
+	@AntesTudo
+	configuração de vazio estático público() {
+		Fique tranquilo. baseURI = "https://restful-booker.herokuapp.com";
+		faker = novo Faker();
+		 usuário = novo usuário(faker. nome(). nome de usuário(),
+				falsificação. nome(). nome(),
+				falsificação. nome(). sobrenome(),
+				falsificação. internet(). safeEmailAddress(),
+				falsificação. internet(). senha(8,10),
+				falsificação. número de telefone(). toString());
+		
+		bookingDates = novas BookingDates("2018-01-02", "2018-01-03");
+		reserva = nova Reserva (usuário. getFirstName(), usuário. getLastName(),
+				(flutuação) falsificação. número(). randomDouble(2, 50, 100000),
+				true,bookingDates,"");
+		Fique tranquilo. filtros(novo RequestLoggingFilter(), novo ResponseLoggingFilter(),
+				novo ErrorLoggingFilter());
+	}
+	
+	@AntesCada um
+	void setRequest() {
+		request = given(). config(RestAssured. config(). logConfig(logConfig(). enableLoggingOfRequestAndResponseIfValidationFails()))
+ . contentType(ContentType. JSON)
+ . auth(). basic("admin", "password123");
+	}
 
-    @Test
-    public void getAllBookingsById_returnOk(){
-            Response response = request
-                                    .when()
-                                        .get("/booking")
-                                    .then()
-                                        .extract()
-                                        .response();
+	@Teste
+	public void getAllBookingsByIdReturnOk() {
+		Resposta = solicitação
+ . quando()
+ . get("/reserva))
+ . então()
+ . extrair()
+ . resposta();
+		
+		assertNotNull(resposta);
+		assertEquals(200, resposta. statusCódigo());
+	}
+	
+	@Teste
+	public void getAllBookingsByUserFirstNameBookingExistsReturnOk() {
+		pedir
+ . quando()
+ . queryParam("nome", "Tatiana")
+ . get("/reserva))
+ . então()
+ . afirmarQue()
+ . statusCode(200)
+ . contentType(ContentType. JSON)
+ . e()
+ . corpo("resultados", temSize(maiorQue(0)));
+	}
+	
+	@Teste
+	public void createBookingWithValidDataReturnOk() {
+		Teste de  reserva = reserva;
+		dado(). config(RestAssured. config(). logConfig(logConfig(). enableLoggingOfRequestAndResponseIfValidationFails()))
+ . contentType(ContentType. JSON)
+ . quando()
+ . corpo(reserva))
+ . post("/reserva")
+ . então()
+ . body(correspondeJsonSchemaInClasspath("createBookingRequestSchema.json"))
+ . e()
+ . afirmarQue()
+ . statusCode(200)
+ . contentType(ContentType. JSON). e(). tempo (lessThan) (3000L));
+	    
+	}
 
-
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(200, response.statusCode());
-    }
-
-    @Test
-    public void  getAllBookingsByUserFirstName_BookingExists_returnOk(){
-                    request
-                        .when()
-                            .queryParam("firstName", "Carol")
-                            .get("/booking")
-                        .then()
-                            .assertThat()
-                            .statusCode(200)
-                            .contentType(ContentType.JSON)
-                        .and()
-                        .body("results", hasSize(greaterThan(0)));
-
-    }
-
-    @Test
-    public void  CreateBooking_WithValidData_returnOk(){
-
-        Booking test = booking;
-        given().config(RestAssured.config().logConfig(logConfig().enableLoggingOfRequestAndResponseIfValidationFails()))
-                    .contentType(ContentType.JSON)
-                        .when()
-                        .body(booking)
-                        .post("/booking")
-                        .then()
-                        .body(matchesJsonSchemaInClasspath("createBookingRequestSchema.json"))
-                        .and()
-                        .assertThat()
-                        .statusCode(200)
-                        .contentType(ContentType.JSON).and().time(lessThan(2000L));
+}
 
 
 
